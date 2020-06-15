@@ -48,70 +48,20 @@ def test_invalid_mimetype(client):
     assert r.status_code == 400
 
 
-def test_trigger_hue_from_incident_open(client):
-    response = {"incident": {"condition": {"state": "open"}}}
-    main.trigger_hue_from_incident(response, 1)
-    
-    url = main.app.config['PHILIPS_HUE_URL']
-    r = requests.get(f'{url}/lights/1')
-    assert r.status_code == 200
-    
-    light_info = r.json()
-    
-    assert light_info["state"]["on"] == True
-    assert light_info["state"]["hue"] == 0
-
-
-def test_trigger_hue_from_incident_closed(client):
-    response = {"incident": {"condition": {"state": "closed"}}}
-    main.trigger_hue_from_incident(response, 1)
-    
-    url = main.app.config['PHILIPS_HUE_URL']
-    r = requests.get(f'{url}/lights/1')
-    assert r.status_code == 200
-    
-    light_info = r.json()
-    
-    assert light_info["state"]["on"] == True
-    assert light_info["state"]["hue"] == 25500
-
-
-def test_nonalert_message(client, capsys):
+def test_minimally_valid_message(client, capsys):
     r = client.post('/', json={'message': True})
-    assert r.status_code == 400
+    assert r.status_code == 204
 
     out, _ = capsys.readouterr()
-    assert 'invalid incident format' in out
+    assert 'Hello World!' in out
 
 
-def test_open_alert_message(client, capsys):
-    response = '{"incident": {"condition": {"state": "open"}}}'
-    data = base64.b64encode(response.encode()).decode()
-
-    r = client.post('/', json={'message': {'data': data}})
-    assert r.status_code == 204
-
-    url = main.app.config['PHILIPS_HUE_URL']
-    r = requests.get(f'{url}/lights/1')
-    assert r.status_code == 200
-    
-    light_info = r.json()
-    
-    assert light_info["state"]["on"] == True
-    assert light_info["state"]["hue"] == 0
-    
-def test_closed_alert_message(client, capsys):
-    response = '{"incident": {"condition": {"state": "closed"}}}'
-    data = base64.b64encode(response.encode()).decode()
+def test_populated_message(client, capsys):
+    name = str(uuid4())
+    data = base64.b64encode(name.encode()).decode()
 
     r = client.post('/', json={'message': {'data': data}})
     assert r.status_code == 204
 
-    url = main.app.config['PHILIPS_HUE_URL']
-    r = requests.get(f'{url}/lights/1')
-    assert r.status_code == 200
-    
-    light_info = r.json()
-    
-    assert light_info["state"]["on"] == True
-    assert light_info["state"]["hue"] == 25500    
+    out, _ = capsys.readouterr()
+    assert f'Hello {name}!' in out 
