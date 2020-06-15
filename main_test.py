@@ -25,16 +25,11 @@ import pytest
 
 import main
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-URL = os.environ.get("philips-url")
-
 
 @pytest.fixture
 def client():
     main.app.testing = True
+    main.app.config.from_object('config.DevConfig')
     return main.app.test_client()
 
 
@@ -53,11 +48,12 @@ def test_invalid_mimetype(client):
     assert r.status_code == 400
 
 
-def test_configure_light_open():
+def test_trigger_hue_from_incident_open(client):
     response = {"incident": {"condition": {"state": "open"}}}
-    main.configure_light(response, 1)
+    main.trigger_hue_from_incident(response, 1)
     
-    r = requests.get(f'{URL}/lights/1')
+    url = main.app.config['PHILIPS_HUE_URL']
+    r = requests.get(f'{url}/lights/1')
     assert r.status_code == 200
     
     light_info = r.json()
@@ -66,11 +62,12 @@ def test_configure_light_open():
     assert light_info["state"]["hue"] == 0
 
 
-def test_configure_light_closed():
+def test_trigger_hue_from_incident_closed(client):
     response = {"incident": {"condition": {"state": "closed"}}}
-    main.configure_light(response, 1)
+    main.trigger_hue_from_incident(response, 1)
     
-    r = requests.get(f'{URL}/lights/1')
+    url = main.app.config['PHILIPS_HUE_URL']
+    r = requests.get(f'{url}/lights/1')
     assert r.status_code == 200
     
     light_info = r.json()
@@ -94,7 +91,8 @@ def test_open_alert_message(client, capsys):
     r = client.post('/', json={'message': {'data': data}})
     assert r.status_code == 204
 
-    r = requests.get(f'{URL}/lights/1')
+    url = main.app.config['PHILIPS_HUE_URL']
+    r = requests.get(f'{url}/lights/1')
     assert r.status_code == 200
     
     light_info = r.json()
@@ -109,7 +107,8 @@ def test_closed_alert_message(client, capsys):
     r = client.post('/', json={'message': {'data': data}})
     assert r.status_code == 204
 
-    r = requests.get(f'{URL}/lights/1')
+    url = main.app.config['PHILIPS_HUE_URL']
+    r = requests.get(f'{url}/lights/1')
     assert r.status_code == 200
     
     light_info = r.json()
