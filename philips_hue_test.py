@@ -18,21 +18,21 @@
 import requests
 import os
 import base64
-from uuid import uuid4
-from dotenv import load_dotenv
 
 import pytest
 
+import main
 import philips_hue
 
-load_dotenv()
-URL = os.environ.get("philips-url")
+main.app.config.from_object('config.DevConfig')
+url = main.app.config['PHILIPS_HUE_URL']
 
 
 def test_set_color():
-    philips_hue.set_color(1, 0)
+    philips_hue_client = philips_hue.PhilipsHueClient(url)
+    philips_hue_client.set_color(1, 0)
     
-    r = requests.get(f'{URL}/lights/1')
+    r = requests.get(f'{url}/lights/1')
     assert r.status_code == 200
     
     light_info = r.json()
