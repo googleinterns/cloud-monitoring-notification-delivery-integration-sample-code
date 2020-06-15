@@ -12,20 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import requests
 import json
-from dotenv import load_dotenv
-
-load_dotenv()
-URL = os.environ.get("philips-url")
 
 
-def set_color(light_id, hue):
-    """Sets the color of a Philips Hue light to a specified hue value.
+class PhilipsHueClient(object):
+    """A client to interact with the Philips Hue API and configure Philips Hue lights."""
+    
+    
+    def __init__(self, api_url):
+        self.api_url = api_url
+        
 
-    Args:
-        light_id: The id of the light to set the color for.
-        hue: Hue of the light.
-    """
-    r = requests.put(url = f'{URL}/lights/{light_id}/state', data=json.dumps({"on": True, "hue": hue}))
+    def set_color(self, light_id, hue):
+        """Sets the color of a Philips Hue light to a specified hue value.
+
+        Args:
+            light_id: The id of the light to set the color for.
+            hue: Hue of the light.
+        """
+        r = requests.put(url = f'{self.api_url}/lights/{light_id}/state', data=json.dumps({"on": True, "hue": hue}))
