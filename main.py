@@ -25,25 +25,9 @@ from flask import Flask, request
 
 app = Flask(__name__)
 app.config.from_object('config.DevConfig')
-philips_hue_client = philips_hue.PhilipsHueClient(app.config['PHILIPS_HUE_URL'])
 # [END run_pubsub_server_setup]
 
 
-def trigger_hue_from_incident(incident, light_id):
-    """Changes the color of a Philips Hue light based on an incident message from pub/sub.
-    
-    Sets the color of the light to red if the incident is open and green if the incident is closed.
-
-    Args:
-        incident: A JSON message about an incident from pub/sub.
-        light_id: The id of the light to set the color for.
-    """
-    if incident["incident"]["condition"]["state"] == "open":
-        philips_hue_client.set_color(light_id, 0)
-    elif incident["incident"]["condition"]["state"] == "closed":
-        philips_hue_client.set_color(light_id, 25500)
-
-        
 # [START run_pubsub_handler]
 @app.route('/', methods=['POST'])
 def index():
@@ -60,19 +44,11 @@ def index():
 
     pubsub_message = envelope['message']
 
-    response = 'empty response'
+    name = 'World'
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
-        response = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
-        
-    try:
-        response = json.loads(response)
-    except json.JSONDecodeError:
-        msg = 'invalid incident format'
-        print(f'error: {msg}')
-        return f'Bad Request: {msg}', 400
+        name = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
 
-    trigger_hue_from_incident(response, 1)  
-
+    print(f'Hello {name}!')
 
     return ('', 204)
 # [END run_pubsub_handler]
