@@ -24,10 +24,12 @@ from flask import Flask, request
 
 
 app = Flask(__name__)
+app.config.from_object('config.DevConfig')
+philips_hue_client = philips_hue.PhilipsHueClient(app.config['PHILIPS_HUE_URL'])
 # [END run_pubsub_server_setup]
 
 
-def configure_light(incident, light_id):
+def trigger_hue_from_incident(incident, light_id):
     """Changes the color of a Philips Hue light based on an incident message from pub/sub.
     
     Sets the color of the light to red if the incident is open and green if the incident is closed.
@@ -37,9 +39,9 @@ def configure_light(incident, light_id):
         light_id: The id of the light to set the color for.
     """
     if incident["incident"]["condition"]["state"] == "open":
-        philips_hue.set_color(light_id, 0)
+        philips_hue_client.set_color(light_id, 0)
     elif incident["incident"]["condition"]["state"] == "closed":
-        philips_hue.set_color(light_id, 25500)
+        philips_hue_client.set_color(light_id, 25500)
 
         
 # [START run_pubsub_handler]
@@ -69,7 +71,7 @@ def index():
         print(f'error: {msg}')
         return f'Bad Request: {msg}', 400
 
-    configure_light(response, 1)  
+    trigger_hue_from_incident(response, 1)  
 
 
     return ('', 204)
