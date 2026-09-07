@@ -93,13 +93,13 @@ args: ['build', '--build-arg', 'PROJECT_ID=$PROJECT_ID', '--tag', 'gcr.io/$PROJE
 ```
 PROJECT_ID=$(gcloud config get-value project)
 
-gsutil mb gs://${PROJECT_ID}-tfstate
+gcloud storage buckets create gs://${PROJECT_ID}-tfstate
 ```
 
 2. You may optionally enable Object Versioning to keep the history of your deployments:
 
 ```
-gsutil versioning set on gs://${PROJECT_ID}-tfstate
+gcloud storage buckets update --versioning gs://${PROJECT_ID}-tfstate
 ```
 
 3. Retrieve the email for your project's Cloud Build service account:
